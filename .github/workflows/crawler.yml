@@ -3,7 +3,7 @@ name: Hot News Crawler
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * *"   # 每天早上 8 点（北京时间 UTC+8）
+    - cron: "0 0 * * *"
 
 jobs:
   crawl:
@@ -26,36 +26,33 @@ jobs:
       run: |
         python main.py
 
-    - name: Upload output files
+    # ⭐ 将最新生成的 HTML 复制为 index.html（GitHub Pages 可访问）
+    - name: Copy latest HTML to root as index.html
+      run: |
+        latest_html=$(ls -t output/*/html/*.html | head -n 1)
+        cp "$latest_html" index.html
+        echo "Published HTML: $latest_html"
+
+    # ⭐ 上传 index.html（方便调试，可选）
+    - name: Upload published index.html
       uses: actions/upload-artifact@v4
       with:
-        name: news-output
-        path: output/
+        name: published-index
+        path: index.html
 
+    # ⭐ 自动推送更新到仓库（让 GitHub Pages 更新）
+    - name: Commit and push index.html
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Actions"
+        git add index.html
+        git commit -m "Update index.html" || echo "No changes to commit"
+        git push
+
+    # ⭐ 微信推送链接（不会再推文本）
     - name: Send WeChat Notification (only URL)
       run: |
-        # 找到 output/ 下最新生成的 HTML 文件
-        LATEST_HTML=$(find output -name "*.html" | sort | tail -n 1)
-
-        if [ -z "$LATEST_HTML" ]; then
-          echo "❌ 未找到 HTML 文件，无法推送"
-          exit 1
-        fi
-
-        echo "找到最新文件：$LATEST_HTML"
-
-        # 转换为 GitHub Pages URL
-        REL_PATH=${LATEST_HTML#output/}
-        FULL_URL="https://venwing.github.io/TrendRadar/output/$REL_PATH"
-
-        echo "生成访问链接：$FULL_URL"
-
-        # 推送到 Server酱
+        PAGE_URL="https://venwing.github.io/TrendRadar/index.html"
         curl -X POST "https://sctapi.ftqq.com/${{ secrets.SERVERCHAN_KEY }}.send" \
-             -d "title=今日趋势热讯更新" \
-             -d "desp=点击查看今日新闻：$FULL_URL"
-- name: Deploy HTML to GitHub Pages
-  uses: peaceiris/actions-gh-pages@v3
-  with:
-    github_token: ${{ secrets.GITHUB_TOKEN }}
-    publish_dir: ./output
+          -d "title=今日趋势热讯（网页版）" \
+          -d "desp=点击查看今日汇总：$PAGE_URL"
