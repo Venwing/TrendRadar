@@ -3,34 +3,39 @@ name: Hot News Crawler
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */4 * * *"   # 每4小时自动运行一次
-
-permissions:
-  contents: write
+    - cron: "0 0 * * *"  
+    # 每天早上 8 点（北京时间 UTC+8），UTC 0 点运行
 
 jobs:
   crawl:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
 
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
 
-      - name: Run TrendRadar crawler
-        run: |
-          python main.py
+    - name: Run TrendRadar crawler
+      run: |
+        python main.py
 
-      - name: Upload output
-        uses: actions/upload-artifact@v4
-        with:
-          name: output
-          path: output/
+    - name: Upload output
+      uses: actions/upload-artifact@v4
+      with:
+        name: news-output
+        path: output/
+
+    - name: Send Notification to WeChat (Server酱)
+      run: |
+        NEWS_CONTENT=$(cat output/news.txt)
+        curl -X POST "https://sctapi.ftqq.com/SCT304954TsBAMeVKoTWlu5jUuUt6GwVtL.send" \
+        -d "title=今日热点新闻更新" \
+        --data-urlencode "desp=${NEWS_CONTENT}"
