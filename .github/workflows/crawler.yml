@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 0 * * *"  
-    # 每天早上 8 点（北京时间 UTC+8，对应 UTC 0 点）
+    # 每天早上 8 点（北京时间 UTC+8）
 
 jobs:
   crawl:
@@ -35,19 +35,19 @@ jobs:
 
     - name: Send Notification to WeChat (Server酱)
       run: |
-        # 自动寻找 output 中最新的 md / txt / html 文件
-        FILE=$(ls -t output | grep -E ".md$|.txt$|.html$" | head -n 1)
+        echo "🔍 自动查找 output 下最新的推送文件..."
+
+        FILE=$(ls output | grep -E ".md$|.txt$|.html$" | head -n 1)
 
         if [ -z "$FILE" ]; then
           echo "❌ 未找到可发送的新闻文件"
           exit 1
         fi
 
-        echo "📄 找到文件：$FILE"
+        echo "📄 将发送文件：$FILE"
 
         CONTENT=$(cat output/$FILE)
 
-        # 发送 Server酱通知
         curl -X POST "https://sctapi.ftqq.com/${{ secrets.SERVERCHAN_KEY }}.send" \
-             -d "title=今日趋势热讯" \
-             -d "desp=$CONTENT"
+            -d "title=今日趋势热讯" \
+            -d "desp=$CONTENT"
