@@ -3,8 +3,7 @@ name: Hot News Crawler
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * *"  
-    # 每天早上 8 点（北京时间 UTC+8）
+    - cron: "0 0 * * *"   # 每天早上 8 点（北京时间 UTC+8）
 
 jobs:
   crawl:
@@ -27,27 +26,31 @@ jobs:
       run: |
         python main.py
 
-    - name: Upload output
+    - name: Upload output files
       uses: actions/upload-artifact@v4
       with:
         name: news-output
         path: output/
 
-    - name: Send Notification to WeChat (Server酱)
+    - name: Send WeChat Notification (only URL)
       run: |
-        echo "🔍 自动查找 output 下最新的推送文件..."
+        # 找到 output/ 下最新生成的 HTML 文件
+        LATEST_HTML=$(find output -name "*.html" | sort | tail -n 1)
 
-        FILE=$(ls output | grep -E ".md$|.txt$|.html$" | head -n 1)
-
-        if [ -z "$FILE" ]; then
-          echo "❌ 未找到可发送的新闻文件"
+        if [ -z "$LATEST_HTML" ]; then
+          echo "❌ 未找到 HTML 文件，无法推送"
           exit 1
         fi
 
-        echo "📄 将发送文件：$FILE"
+        echo "找到最新文件：$LATEST_HTML"
 
-        CONTENT=$(cat output/$FILE)
+        # 转换为 GitHub Pages URL
+        REL_PATH=${LATEST_HTML#output/}
+        FULL_URL="https://venwing.github.io/TrendRadar/output/$REL_PATH"
 
+        echo "生成访问链接：$FULL_URL"
+
+        # 推送到 Server酱
         curl -X POST "https://sctapi.ftqq.com/${{ secrets.SERVERCHAN_KEY }}.send" \
-            -d "title=今日趋势热讯" \
-            -d "desp=$CONTENT"
+             -d "title=今日趋势热讯更新" \
+             -d "desp=点击查看今日新闻：$FULL_URL"
