@@ -5453,6 +5453,6 @@ def create_text_summary(news_list):
 
 
 # --- 写入 summary 到 output/news.txt ---
-summary = create_text_summary(top_news)  # top_news 是你的新闻列表变量
+summary = create_text_summary(filtered_news)  # top_news 是你的新闻列表变量
 with open("output/news.txt", "w", encoding="utf-8") as f:
     f.write(summary)
