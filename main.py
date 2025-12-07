@@ -5430,29 +5430,21 @@ def main():
 if __name__ == "__main__":
     main()
 import textwrap
+# ==========================
+# 程序主入口
+# ==========================
+if __name__ == "__main__":
+    main()
 
-def create_text_summary(news_list):
-    """生成适合微信阅读的纯文本摘要"""
-    lines = []
-    lines.append("📢【今日趋势热讯摘要】\n")
+# ==========================
+# 以下功能不再需要（避免报错）
+# 只保留网页生成，不生成 summary，不推送，不引用 filtered_news
+# ==========================
 
-    for i, n in enumerate(news_list[:10], 1):  # 只取前10条最重要内容
-        title = n.get("title", "").strip()
-        source = n.get("source", "未知来源")
-        url = n.get("url", "")
+# def create_text_summary(news_list):
+#     """旧的微信文本摘要功能（已禁用）"""
+#     return ""
 
-        wrapped_title = "\n".join(textwrap.wrap(title, width=28))
+# 不再写入 summary
+# 不再引用 filtered_news
 
-        lines.append(f"{i}. {wrapped_title}")
-        lines.append(f"📌 来源：{source}")
-        if url:
-            lines.append(f"🔗 链接：{url}")
-        lines.append("")  # 空行分隔
-
-    return "\n".join(lines)
-
-
-# --- 写入 summary 到 output/news.txt ---
-summary = create_text_summary(filtered_news)  # top_news 是你的新闻列表变量
-with open("output/news.txt", "w", encoding="utf-8") as f:
-    f.write(summary)
