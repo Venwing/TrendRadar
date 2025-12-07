@@ -54,3 +54,8 @@ jobs:
         curl -X POST "https://sctapi.ftqq.com/${{ secrets.SERVERCHAN_KEY }}.send" \
              -d "title=今日趋势热讯更新" \
              -d "desp=点击查看今日新闻：$FULL_URL"
+- name: Deploy HTML to GitHub Pages
+  uses: peaceiris/actions-gh-pages@v3
+  with:
+    github_token: ${{ secrets.GITHUB_TOKEN }}
+    publish_dir: ./output
